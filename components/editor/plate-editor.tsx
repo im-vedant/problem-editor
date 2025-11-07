@@ -2,26 +2,79 @@
 
 import * as React from 'react';
 
-import { normalizeNodeId } from 'platejs';
+import { normalizeNodeId, Value } from 'platejs';
 import { Plate, usePlateEditor } from 'platejs/react';
 
 import { EditorKit } from '@/components/editor/editor-kit';
 import { SettingsDialog } from '@/components/editor/settings-dialog';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 
-export function PlateEditor() {
+interface PlateEditorProps {
+  onChange?: (value: Value) => void;
+  onEditorChange?: (editor: any) => void;
+  initialValue?: Value;
+  initialMarkdown?: string;
+  readOnly?: boolean;
+  showSettings?: boolean;
+}
+
+export function PlateEditor({
+  onChange,
+  onEditorChange,
+  initialValue,
+  initialMarkdown,
+  readOnly = false,
+  showSettings = true,
+}: PlateEditorProps = {}) {
+  // Prepare initial value before creating editor
+  const preparedInitialValue = React.useMemo(() => {
+    if (initialValue) {
+      return initialValue;
+    }
+    // Return default value
+    return value;
+  }, [initialValue]);
+
   const editor = usePlateEditor({
     plugins: EditorKit,
-    value,
+    value: preparedInitialValue,
   });
 
+  // Handle markdown deserialization after editor is ready
+  React.useEffect(() => {
+    if (!editor || !initialMarkdown) return;
+
+    try {
+      if (editor?.api?.markdown?.deserialize) {
+        const deserializedValue = editor.api.markdown.deserialize(initialMarkdown);
+        // Use insertFragment to set the content
+        editor.tf.setValue(deserializedValue);
+        console.info('[PlateEditor] Deserialized markdown content');
+      }
+    } catch (error) {
+      console.error('Error deserializing markdown:', error);
+    }
+  }, [editor, initialMarkdown]);
+
+  React.useEffect(() => {
+    if (onEditorChange) {
+      onEditorChange(editor);
+    }
+  }, [editor, onEditorChange]);
+
+  const handleChange = (newValue: Value) => {
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
+
   return (
-    <Plate editor={editor}>
+    <Plate editor={editor} onChange={({ value }) => handleChange(value)}>
       <EditorContainer>
-        <Editor variant="demo" />
+        <Editor variant="demo" disabled={readOnly} />
       </EditorContainer>
 
-      <SettingsDialog />
+      {showSettings && <SettingsDialog />}
     </Plate>
   );
 }
