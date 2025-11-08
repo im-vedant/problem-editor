@@ -1,65 +1,322 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useState, useCallback } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProblemPreview from '@/components/editor/problem-preview';
+import SectionEditor from '@/components/editor/section-editor';
+
+interface Example {
+  id: string;
+  title: string;
+  content: string;
+}
+
+interface Hint {
+  id: string;
+  title: string;
+  content: string;
+}
+
+interface ProblemContent {
+  title: string;
+  description: string;
+  examples: Example[];
+  hints: Hint[];
+  constraint: string;
+  requirement: string;
+  theory: string;
+}
+
+export default function ProblemEditorPage() {
+  const [problemContent, setProblemContent] = useState<ProblemContent>({
+    title: '',
+    description: '',
+    examples: [],
+    hints: [],
+    constraint: '',
+    requirement: '',
+    theory: '',
+  });
+
+  const [activeTab, setActiveTab] = useState('title');
+
+  const handleContentChange = useCallback((section: string, content: string, index?: number) => {
+    setProblemContent(prev => {
+      if (section === 'examples' && index !== undefined) {
+        const newExamples = [...prev.examples];
+        if (newExamples[index]) {
+          newExamples[index].content = content;
+        }
+        return { ...prev, examples: newExamples };
+      }
+      if (section === 'hints' && index !== undefined) {
+        const newHints = [...prev.hints];
+        if (newHints[index]) {
+          newHints[index].content = content;
+        }
+        return { ...prev, hints: newHints };
+      }
+      return {
+        ...prev,
+        [section]: content,
+      };
+    });
+  }, []);
+
+  // Add new example
+  const addExample = () => {
+    setProblemContent(prev => ({
+      ...prev,
+      examples: [
+        ...prev.examples,
+        {
+          id: Date.now().toString(),
+          title: `Example ${prev.examples.length + 1}`,
+          content: '',
+        },
+      ],
+    }));
+  };
+
+  // Remove example
+  const removeExample = (id: string) => {
+    setProblemContent(prev => ({
+      ...prev,
+      examples: prev.examples.filter(ex => ex.id !== id),
+    }));
+  };
+
+  // Update example title
+  const updateExampleTitle = (id: string, title: string) => {
+    setProblemContent(prev => ({
+      ...prev,
+      examples: prev.examples.map(ex => (ex.id === id ? { ...ex, title } : ex)),
+    }));
+  };
+
+  // Add new hint
+  const addHint = () => {
+    setProblemContent(prev => ({
+      ...prev,
+      hints: [
+        ...prev.hints,
+        {
+          id: Date.now().toString(),
+          title: `Hint ${prev.hints.length + 1}`,
+          content: '',
+        },
+      ],
+    }));
+  };
+
+  // Remove hint
+  const removeHint = (id: string) => {
+    setProblemContent(prev => ({
+      ...prev,
+      hints: prev.hints.filter(hint => hint.id !== id),
+    }));
+  };
+
+  // Update hint title
+  const updateHintTitle = (id: string, title: string) => {
+    setProblemContent(prev => ({
+      ...prev,
+      hints: prev.hints.map(hint => (hint.id === id ? { ...hint, title } : hint)),
+    }));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-black py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Problem Editor</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Create and edit your problem with multiple sections</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-9 mb-8 bg-white dark:bg-zinc-900 p-1 rounded-lg border border-gray-200 dark:border-zinc-800 overflow-x-auto">
+            <TabsTrigger value="title" className="text-sm">Title</TabsTrigger>
+            <TabsTrigger value="description" className="text-sm">Description</TabsTrigger>
+            <TabsTrigger value="examples" className="text-sm">Examples</TabsTrigger>
+            <TabsTrigger value="hints" className="text-sm">Hints</TabsTrigger>
+            <TabsTrigger value="constraint" className="text-sm">Constraint</TabsTrigger>
+            <TabsTrigger value="requirement" className="text-sm">Requirement</TabsTrigger>
+            <TabsTrigger value="theory" className="text-sm">Theory</TabsTrigger>
+            <TabsTrigger value="preview" className="text-sm font-bold text-blue-600 dark:text-blue-400">Preview</TabsTrigger>
+          </TabsList>
+
+          {/* Title Section */}
+          <TabsContent value="title" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Problem Title</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Enter the title of your problem</p>
+              <SectionEditor
+                section="title"
+                content={problemContent.title}
+                onChange={handleContentChange}
+                placeholder="Enter problem title..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Description Section */}
+          <TabsContent value="description" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Problem Description</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Provide a detailed description of the problem</p>
+              <SectionEditor
+                section="description"
+                content={problemContent.description}
+                onChange={handleContentChange}
+                placeholder="Enter problem description..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Examples Section */}
+          <TabsContent value="examples" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Examples</h2>
+                <button
+                  onClick={addExample}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  ➕ Add Example
+                </button>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Add multiple examples to illustrate the problem</p>
+
+              {problemContent.examples.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 py-8 text-center">No examples yet. Click "Add Example" to create one.</p>
+              ) : (
+                <div className="space-y-6">
+                  {problemContent.examples.map((example, index) => (
+                    <div key={example.id} className="bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <input
+                          type="text"
+                          value={example.title}
+                          onChange={(e) => updateExampleTitle(example.id, e.target.value)}
+                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-zinc-700 px-2 py-1 w-full focus:outline-none focus:border-blue-500"
+                          placeholder="Example title"
+                        />
+                        <button
+                          onClick={() => removeExample(example.id)}
+                          className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <SectionEditor
+                        section={`examples-${example.id}`}
+                        content={example.content}
+                        onChange={(_, content) => handleContentChange('examples', content, index)}
+                        placeholder={`Enter content for ${example.title}...`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Hints Section */}
+          <TabsContent value="hints" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Hints</h2>
+                <button
+                  onClick={addHint}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  ➕ Add Hint
+                </button>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Add multiple hints to guide problem solvers</p>
+
+              {problemContent.hints.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 py-8 text-center">No hints yet. Click "Add Hint" to create one.</p>
+              ) : (
+                <div className="space-y-6">
+                  {problemContent.hints.map((hint, index) => (
+                    <div key={hint.id} className="bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <input
+                          type="text"
+                          value={hint.title}
+                          onChange={(e) => updateHintTitle(hint.id, e.target.value)}
+                          className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-zinc-700 px-2 py-1 w-full focus:outline-none focus:border-blue-500"
+                          placeholder="Hint title"
+                        />
+                        <button
+                          onClick={() => removeHint(hint.id)}
+                          className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <SectionEditor
+                        section={`hints-${hint.id}`}
+                        content={hint.content}
+                        onChange={(_, content) => handleContentChange('hints', content, index)}
+                        placeholder={`Enter content for ${hint.title}...`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Constraint Section */}
+          <TabsContent value="constraint" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Constraints</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Define the constraints for this problem</p>
+              <SectionEditor
+                section="constraint"
+                content={problemContent.constraint}
+                onChange={handleContentChange}
+                placeholder="Enter constraints..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Requirement Section */}
+          <TabsContent value="requirement" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Requirements</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Specify the requirements for solving this problem</p>
+              <SectionEditor
+                section="requirement"
+                content={problemContent.requirement}
+                onChange={handleContentChange}
+                placeholder="Enter requirements..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Theory Section */}
+          <TabsContent value="theory" className="space-y-4">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Theory</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Add theoretical concepts and explanations</p>
+              <SectionEditor
+                section="theory"
+                content={problemContent.theory}
+                onChange={handleContentChange}
+                placeholder="Enter theory..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Preview Section */}
+          <TabsContent value="preview" className="space-y-4">
+            <ProblemPreview content={problemContent} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
