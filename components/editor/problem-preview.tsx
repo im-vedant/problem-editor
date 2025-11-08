@@ -32,56 +32,14 @@ interface ProblemPreviewProps {
   content: ProblemContent;
 }
 
-// Helper function to convert Plate editor content to markdown-compatible text
+// Content is already in markdown format, no conversion needed
+// This function is a pass-through to handle the interface consistently
 function plateToMarkdown(content: string): string {
   if (!content || content.trim() === '') {
     return '';
   }
-
-  try {
-    const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .map((node: any) => {
-          if (node.type === 'h1') {
-            return `# ${node.children?.map((c: any) => c.text).join('')}`;
-          } else if (node.type === 'h2') {
-            return `## ${node.children?.map((c: any) => c.text).join('')}`;
-          } else if (node.type === 'h3') {
-            return `### ${node.children?.map((c: any) => c.text).join('')}`;
-          } else if (node.type === 'ul') {
-            return node.children
-              ?.map((item: any) => `* ${item.children?.map((c: any) => c.text).join('')}`)
-              .join('\n');
-          } else if (node.type === 'ol') {
-            return node.children
-              ?.map((item: any, idx: number) => `${idx + 1}. ${item.children?.map((c: any) => c.text).join('')}`)
-              .join('\n');
-          } else if (node.type === 'code_block') {
-            const code = node.children?.map((c: any) => c.text).join('\n');
-            const lang = node.lang || '';
-            return `\`\`\`${lang}\n${code}\n\`\`\``;
-          } else if (node.type === 'blockquote') {
-            return `> ${node.children?.map((c: any) => c.text).join('')}`;
-          } else if (node.type === 'p' || !node.type) {
-            return node.children?.map((c: any) => {
-              let text = c.text || '';
-              if (c.bold) text = `**${text}**`;
-              if (c.italic) text = `*${text}*`;
-              if (c.code) text = `\`${text}\``;
-              return text;
-            }).join('') || '';
-          }
-          return '';
-        })
-        .filter((line: string) => line.trim())
-        .join('\n\n');
-    }
-  } catch (error) {
-    // If parsing fails, return the content as-is
-    return content;
-  }
-
+  
+  // Content is already markdown, return as-is
   return content;
 }
 

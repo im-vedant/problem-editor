@@ -8,6 +8,7 @@ import { Plate, usePlateEditor } from 'platejs/react';
 import { EditorKit } from '@/components/editor/editor-kit';
 import { SettingsDialog } from '@/components/editor/settings-dialog';
 import { Editor, EditorContainer } from '@/components/ui/editor';
+import { cn } from '@/lib/utils';
 
 interface PlateEditorProps {
   onChange?: (value: Value) => void;
@@ -47,6 +48,7 @@ export function PlateEditor({
     try {
       if (editor?.api?.markdown?.deserialize) {
         const deserializedValue = editor.api.markdown.deserialize(initialMarkdown);
+        console.log("Markdown content", deserializedValue)
         // Use insertFragment to set the content
         editor.tf.setValue(deserializedValue);
         console.info('[PlateEditor] Deserialized markdown content');

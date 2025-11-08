@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProblemPreview from '@/components/editor/problem-preview';
 import SectionEditor from '@/components/editor/section-editor';
@@ -27,8 +27,6 @@ interface ProblemContent {
   theory: string;
 }
 
-const STORAGE_KEY = 'problem-editor-content';
-
 export default function ProblemEditorPage() {
   const [problemContent, setProblemContent] = useState<ProblemContent>({
     title: '',
@@ -41,27 +39,8 @@ export default function ProblemEditorPage() {
   });
 
   const [activeTab, setActiveTab] = useState('title');
-  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    if (hasLoadedFromStorage) return;
-
-    try {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      if (savedContent) {
-        const parsed = JSON.parse(savedContent);
-        setProblemContent(parsed);
-        console.info('[ProblemEditor] Loaded problem from localStorage');
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-    }
-
-    setHasLoadedFromStorage(true);
-  }, [hasLoadedFromStorage]);
-
-  const handleContentChange = (section: string, content: string, index?: number) => {
+  const handleContentChange = useCallback((section: string, content: string, index?: number) => {
     setProblemContent(prev => {
       if (section === 'examples' && index !== undefined) {
         const newExamples = [...prev.examples];
@@ -82,55 +61,7 @@ export default function ProblemEditorPage() {
         [section]: content,
       };
     });
-  };
-
-  // Save problem to localStorage
-  const handleSaveProblem = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(problemContent));
-      console.info('[ProblemEditor] Saved problem to localStorage');
-      alert('Problem saved successfully!');
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-      alert('Error saving problem');
-    }
-  };
-
-  // Load problem from localStorage
-  const handleLoadProblem = () => {
-    try {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      if (savedContent) {
-        const parsed = JSON.parse(savedContent);
-        setProblemContent(parsed);
-        console.info('[ProblemEditor] Loaded problem from localStorage');
-        alert('Problem loaded successfully!');
-      } else {
-        alert('No saved problem found');
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-      alert('Error loading problem');
-    }
-  };
-
-  // Clear problem
-  const handleClearProblem = () => {
-    if (window.confirm('Are you sure you want to clear all content? This cannot be undone.')) {
-      setProblemContent({
-        title: '',
-        description: '',
-        examples: [],
-        hints: [],
-        constraint: '',
-        requirement: '',
-        theory: '',
-      });
-      localStorage.removeItem(STORAGE_KEY);
-      console.info('[ProblemEditor] Cleared problem content');
-      alert('Problem cleared');
-    }
-  };
+  }, []);
 
   // Add new example
   const addExample = () => {
@@ -200,28 +131,6 @@ export default function ProblemEditorPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Problem Editor</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">Create and edit your problem with multiple sections</p>
-          
-          {/* Action Buttons */}
-          <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={handleSaveProblem}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
-            >
-              💾 Save Problem
-            </button>
-            <button
-              onClick={handleLoadProblem}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-            >
-              📂 Load Problem
-            </button>
-            <button
-              onClick={handleClearProblem}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-            >
-              🗑️ Clear All
-            </button>
-          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
