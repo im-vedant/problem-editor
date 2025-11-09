@@ -172,15 +172,24 @@ export default function ProblemEditorPage() {
     setLoading(true);
     setMessage('');
     try {
+      // Helper function to clean zero-width spaces
+      const cleanText = (text: string) => {
+        return text
+          .replace(/\u200B/g, '') // Remove zero-width spaces
+          .replace(/\u200C/g, '') // Remove zero-width non-joiner
+          .replace(/\u200D/g, '') // Remove zero-width joiner
+          .trim();
+      };
+
       const payload = {
-        slug: problemContent.slug,
-        title: problemContent.title,
-        description: problemContent.description,
-        examples: problemContent.examples.map(ex => ex.content),
-        requirements: problemContent.requirement,
-        theory: problemContent.theory,
-        hints: problemContent.hints.map(h => h.content),
-        constraints: problemContent.constraint,
+        slug: cleanText(problemContent.slug),
+        title: cleanText(problemContent.title),
+        description: cleanText(problemContent.description),
+        examples: problemContent.examples.map(ex => cleanText(ex.content)),
+        requirements: cleanText(problemContent.requirement),
+        theory: cleanText(problemContent.theory),
+        hints: problemContent.hints.map(h => cleanText(h.content)),
+        constraints: cleanText(problemContent.constraint),
         runnerTemplate: '',
       };
 

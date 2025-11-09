@@ -21,7 +21,13 @@ function SectionEditor({
   const editorRef = useRef<any>(null);
   
   // Only set initial markdown ONCE on mount - never update it again
-  const [initialMarkdown] = useState<string>(content || '');
+  const [initialMarkdown] = useState<string>(() => {
+    // Clean up zero-width spaces from initial content
+    return (content || '')
+      .replace(/\u200B/g, '') // Remove zero-width spaces
+      .replace(/\u200C/g, '') // Remove zero-width non-joiner
+      .replace(/\u200D/g, ''); // Remove zero-width joiner
+  });
 
   // Parse content to Plate value format
   const initialValue = useMemo(() => {
@@ -57,6 +63,13 @@ function SectionEditor({
           // Fallback: if markdown API not available, use JSON
           markdownContent = JSON.stringify(value);
         }
+        
+        // Clean up zero-width spaces and trim
+        markdownContent = markdownContent
+          .replace(/\u200B/g, '') // Remove zero-width spaces
+          .replace(/\u200C/g, '') // Remove zero-width non-joiner
+          .replace(/\u200D/g, '') // Remove zero-width joiner
+          .trim();
         
         // Call the onChange callback with markdown content
         onChange(section, markdownContent);
