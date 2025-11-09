@@ -4,6 +4,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 
 interface Example {
@@ -44,7 +45,7 @@ function plateToMarkdown(content: string): string {
 const MarkdownRenderer = ({ content }: { content: string }) => (
   <ReactMarkdown
     remarkPlugins={[remarkMath]}
-    rehypePlugins={[rehypeKatex]}
+    rehypePlugins={[rehypeKatex, rehypeRaw]}
     components={{
       h1: ({ node, ...props }) => (
         <h1 className="text-4xl font-bold mt-8 mb-4 text-gray-900 dark:text-white" {...props} />
@@ -68,7 +69,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => (
         <li className="mb-2 leading-relaxed" {...props} />
       ),
       p: ({ node, ...props }) => (
-        <p className="text-gray-700 dark:text-gray-300 leading-7 mb-4" {...props} />
+        <p className="text-gray-700 dark:text-gray-300 leading-7 " {...props} />
       ),
       code: ({ node, className, children, ...props }: any) => {
         const inline = !className;
@@ -114,6 +115,13 @@ const MarkdownRenderer = ({ content }: { content: string }) => (
       ),
       hr: () => (
         <hr className="my-6 border-gray-300 dark:border-zinc-700" />
+      ),
+      // Add support for raw HTML elements
+      div: ({ node, ...props }) => (
+        <div className="my-4" {...props} />
+      ),
+      span: ({ node, ...props }) => (
+        <span {...props} />
       ),
     }}
   >
