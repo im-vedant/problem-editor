@@ -8,13 +8,11 @@ import 'katex/dist/katex.min.css';
 
 interface Example {
   id: string;
-  title: string;
   content: string;
 }
 
 interface Hint {
   id: string;
-  title: string;
   content: string;
 }
 
@@ -153,7 +151,6 @@ export default function ProblemPreview({ content }: ProblemPreviewProps) {
             <div className="space-y-6">
               {content.examples.map((example) => (
                 <div key={example.id} className="bg-gray-50 dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-4">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{example.title}</h3>
                   <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
                     <MarkdownRenderer content={plateToMarkdown(example.content)} />
                   </div>
@@ -170,7 +167,6 @@ export default function ProblemPreview({ content }: ProblemPreviewProps) {
             <div className="space-y-4">
               {content.hints.map((hint) => (
                 <div key={hint.id} className="bg-blue-50 dark:bg-blue-950 border-l-4 border-blue-500 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">💡 {hint.title}</h3>
                   <div className="prose dark:prose-invert max-w-none text-blue-800 dark:text-blue-200">
                     <MarkdownRenderer content={plateToMarkdown(hint.content)} />
                   </div>
