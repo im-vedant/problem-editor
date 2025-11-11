@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProblemPreview from '@/components/editor/problem-preview';
 import SectionEditor from '@/components/editor/section-editor';
@@ -17,6 +17,11 @@ interface Hint {
   content: string;
 }
 
+interface Tag {
+  id: string;
+  name: string;
+}
+
 interface ProblemContent {
   slug: string;
   title: string;
@@ -26,6 +31,8 @@ interface ProblemContent {
   constraint: string;
   requirement: string;
   theory: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  selectedTags: Tag[];
 }
 
 export default function ProblemEditorPage() {
@@ -38,11 +45,45 @@ export default function ProblemEditorPage() {
     constraint: '',
     requirement: '',
     theory: '',
+    difficulty: 'easy',
+    selectedTags: [],
   });
 
   const [activeTab, setActiveTab] = useState('slug');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [tagFilterText, setTagFilterText] = useState('');
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-tags-container]')) {
+        setShowTagDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // Fetch all tags on component mount
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch('/api/tags');
+        if (response.ok) {
+          const data = await response.json();
+          setAllTags(data);
+        }
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      }
+    };
+    fetchTags();
+  }, []);
 
   const handleContentChange = useCallback((section: string, content: string, index?: number) => {
     setProblemContent(prev => {
@@ -134,6 +175,7 @@ export default function ProblemEditorPage() {
       
       const examples = data.examples || [];
       const hints = data.hints || [];
+      const tags = data.tags || [];
 
       setProblemContent({
         slug: data.id,
@@ -152,6 +194,8 @@ export default function ProblemEditorPage() {
         constraint: data.constraints || '',
         requirement: data.requirements || '',
         theory: data.theory || '',
+        difficulty: data.difficulty || 'easy',
+        selectedTags: tags || [],
       });
 
       setMessage('Problem loaded successfully');
@@ -190,6 +234,8 @@ export default function ProblemEditorPage() {
         theory: cleanText(problemContent.theory),
         hints: problemContent.hints.map(h => cleanText(h.content)),
         constraints: cleanText(problemContent.constraint),
+        difficulty: problemContent.difficulty,
+        tagIds: problemContent.selectedTags.map(tag => tag.id),
         runnerTemplate: '',
       };
 
@@ -236,12 +282,91 @@ export default function ProblemEditorPage() {
                 className="w-full"
               />
             </div>
+            <div className="flex-1 max-w-md">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Difficulty
+              </label>
+              <select
+                value={problemContent.difficulty}
+                onChange={(e) => setProblemContent(prev => ({ ...prev, difficulty: e.target.value as 'easy' | 'medium' | 'hard' }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
             <Button onClick={fetchProblem} disabled={loading} variant="outline">
               {loading ? 'Loading...' : 'Fetch'}
             </Button>
             <Button onClick={saveProblem} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
               {loading ? 'Saving...' : 'Save'}
             </Button>
+          </div>
+
+          {/* Tags Section */}
+          <div className="mt-6" data-tags-container>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tags
+            </label>
+            <div className="relative">
+              <div className="flex flex-wrap gap-2 p-2 min-h-10 border border-gray-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-950 focus-within:ring-2 focus-within:ring-blue-500">
+                {problemContent.selectedTags.map(tag => (
+                  <div key={tag.id} className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-full text-sm">
+                    {tag.name}
+                    <button
+                      onClick={() => setProblemContent(prev => ({
+                        ...prev,
+                        selectedTags: prev.selectedTags.filter(t => t.id !== tag.id)
+                      }))}
+                      className="font-bold cursor-pointer hover:text-red-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <input
+                  type="text"
+                  placeholder={problemContent.selectedTags.length === 0 ? "Click to add tags..." : ""}
+                  value={tagFilterText}
+                  onChange={(e) => setTagFilterText(e.target.value)}
+                  onFocus={() => setShowTagDropdown(true)}
+                  className="flex-1 min-w-32 outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                />
+              </div>
+              {showTagDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {allTags
+                    .filter(tag => 
+                      !problemContent.selectedTags.find(t => t.id === tag.id) &&
+                      tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
+                    )
+                    .map(tag => (
+                    <div
+                      key={tag.id}
+                      onClick={() => {
+                        setProblemContent(prev => ({
+                          ...prev,
+                          selectedTags: [...prev.selectedTags, tag]
+                        }));
+                        setTagFilterText('');
+                      }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-900 text-gray-900 dark:text-white"
+                    >
+                      {tag.name}
+                    </div>
+                  ))}
+                  {allTags.filter(tag => 
+                    !problemContent.selectedTags.find(t => t.id === tag.id) &&
+                    tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
+                  ).length === 0 && (
+                    <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                      {allTags.length === 0 ? 'No tags available' : 'No matching tags'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {message && (

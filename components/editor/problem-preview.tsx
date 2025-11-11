@@ -17,6 +17,11 @@ interface Hint {
   content: string;
 }
 
+interface Tag {
+  id: string;
+  name: string;
+}
+
 interface ProblemContent {
   title: string;
   description: string;
@@ -25,6 +30,8 @@ interface ProblemContent {
   constraint: string;
   requirement: string;
   theory: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  selectedTags?: Tag[];
 }
 
 interface ProblemPreviewProps {
@@ -130,9 +137,40 @@ const MarkdownRenderer = ({ content }: { content: string }) => (
 );
 
 export default function ProblemPreview({ content }: ProblemPreviewProps) {
+  const getDifficultyColor = (difficulty: string) => {
+    switch(difficulty) {
+      case 'easy':
+        return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100';
+      case 'medium':
+        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100';
+      case 'hard':
+        return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100';
+      default:
+        return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100';
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-8">
       <div className="max-w-4xl mx-auto space-y-12">
+        {/* Difficulty and Tags */}
+        <div className="flex flex-wrap gap-4 items-center">
+          {content.difficulty && (
+            <div className={`px-4 py-2 rounded-full text-sm font-semibold capitalize ${getDifficultyColor(content.difficulty)}`}>
+              Difficulty: {content.difficulty}
+            </div>
+          )}
+          {content.selectedTags && content.selectedTags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {content.selectedTags.map(tag => (
+                <div key={tag.id} className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100 px-3 py-1 rounded-full text-sm">
+                  {tag.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Title */}
         {content.title && (
           <div>

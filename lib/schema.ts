@@ -6,6 +6,7 @@ import {
   integer,
   uniqueIndex,
   serial,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -124,6 +125,7 @@ export const problem = pgTable("problem", {
   theory: text("theory").notNull().default(""),
   hints: text("hints").notNull().default("[]"), // JSON string array
   constraints: text("constraints").notNull().default(""),
+  difficulty: text("difficulty").default("easy").notNull(), // easy, medium, hard
   runnerTemplate: text("runner_template").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -142,6 +144,33 @@ export const implementationAnalytics = pgTable("implementation_analytics", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const tag = pgTable("tag", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const problemTag = pgTable(
+  "problem_tag",
+  {
+    problemId: text("problem_id")
+      .notNull()
+      .references(() => problem.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    pk: primaryKey({
+      columns: [table.problemId, table.tagId],
+    }),
+  })
+);
+
 export const schema = {
   user,
   session,
@@ -151,4 +180,6 @@ export const schema = {
   userSolvedProblems,
   problem,
   implementationAnalytics,
+  tag,
+  problemTag,
 };

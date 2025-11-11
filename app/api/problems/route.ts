@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { problem } from '@/lib/schema';
+import { problem, problemTag, tag } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -29,11 +29,19 @@ export async function GET(request: Request) {
 
     const problemRecord = problemData[0];
     
+    // Fetch tags for this problem
+    const problemTags = await db
+      .select({ id: tag.id, name: tag.name })
+      .from(problemTag)
+      .innerJoin(tag, eq(problemTag.tagId, tag.id))
+      .where(eq(problemTag.problemId, slug));
+    
     // Parse JSON strings back to arrays of strings
     const parsedProblem = {
       ...problemRecord,
       examples: problemRecord.examples ? JSON.parse(problemRecord.examples) : [],
       hints: problemRecord.hints ? JSON.parse(problemRecord.hints) : [],
+      tags: problemTags,
     };
 
     return Response.json(parsedProblem);
@@ -58,6 +66,8 @@ export async function POST(request: Request) {
       theory,
       hints,
       constraints,
+      difficulty = 'easy',
+      tagIds = [],
       runnerTemplate,
     } = body;
 
@@ -87,13 +97,26 @@ export async function POST(request: Request) {
           theory: theory || '',
           hints: JSON.stringify(hints || []),
           constraints: constraints || '',
+          difficulty: difficulty || 'easy',
           runnerTemplate: runnerTemplate || '',
           updatedAt: new Date(),
         })
         .where(eq(problem.id, slug))
         .returning();
 
-      return Response.json(updated[0], { status: 200 });
+      // Update tags - delete old tags and insert new ones
+      await db.delete(problemTag).where(eq(problemTag.problemId, slug));
+      
+      if (tagIds && tagIds.length > 0) {
+        await db.insert(problemTag).values(
+          tagIds.map((tagId: string) => ({
+            problemId: slug,
+            tagId,
+          }))
+        );
+      }
+
+      return Response.json({ ...updated[0], tags: tagIds }, { status: 200 });
     } else {
       // Create new problem
       const newProblem = await db
@@ -107,11 +130,22 @@ export async function POST(request: Request) {
           theory: theory || '',
           hints: JSON.stringify(hints || []),
           constraints: constraints || '',
+          difficulty: difficulty || 'easy',
           runnerTemplate: runnerTemplate || '',
         })
         .returning();
 
-      return Response.json(newProblem[0], { status: 201 });
+      // Insert tags
+      if (tagIds && tagIds.length > 0) {
+        await db.insert(problemTag).values(
+          tagIds.map((tagId: string) => ({
+            problemId: slug,
+            tagId,
+          }))
+        );
+      }
+
+      return Response.json({ ...newProblem[0], tags: tagIds }, { status: 201 });
     }
   } catch (error) {
     console.error('Failed to save problem:', error);
