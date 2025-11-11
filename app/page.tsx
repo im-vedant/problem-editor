@@ -263,14 +263,37 @@ export default function ProblemEditorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Problem Editor</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">Create and edit your problem with multiple sections</p>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-black">
+      {/* Header */}
+      <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Problem Editor</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Create and edit your problem</p>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={fetchProblem} disabled={loading} variant="outline">
+              {loading ? 'Loading...' : 'Fetch'}
+            </Button>
+            <Button onClick={saveProblem} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {loading ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+        {message && (
+          <div className={`mt-3 text-sm ${message.includes('success') ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+            {message}
+          </div>
+        )}
+      </div>
 
-          <div className="flex gap-3 items-end mt-6">
-            <div className="flex-1 max-w-md">
+      {/* Main content area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar */}
+        <div className="w-84 border-r border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Slug Input */}
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Problem Slug
               </label>
@@ -282,7 +305,9 @@ export default function ProblemEditorPage() {
                 className="w-full"
               />
             </div>
-            <div className="flex-1 max-w-md">
+
+            {/* Difficulty */}
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Difficulty
               </label>
@@ -296,101 +321,112 @@ export default function ProblemEditorPage() {
                 <option value="hard">Hard</option>
               </select>
             </div>
-            <Button onClick={fetchProblem} disabled={loading} variant="outline">
-              {loading ? 'Loading...' : 'Fetch'}
-            </Button>
-            <Button onClick={saveProblem} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
-              {loading ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
 
-          {/* Tags Section */}
-          <div className="mt-6" data-tags-container>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tags
-            </label>
-            <div className="relative">
-              <div className="flex flex-wrap gap-2 p-2 min-h-10 border border-gray-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-950 focus-within:ring-2 focus-within:ring-blue-500">
-                {problemContent.selectedTags.map(tag => (
-                  <div key={tag.id} className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-full text-sm">
-                    {tag.name}
-                    <button
-                      onClick={() => setProblemContent(prev => ({
-                        ...prev,
-                        selectedTags: prev.selectedTags.filter(t => t.id !== tag.id)
-                      }))}
-                      className="font-bold cursor-pointer hover:text-red-600"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                <input
-                  type="text"
-                  placeholder={problemContent.selectedTags.length === 0 ? "Click to add tags..." : ""}
-                  value={tagFilterText}
-                  onChange={(e) => setTagFilterText(e.target.value)}
-                  onFocus={() => setShowTagDropdown(true)}
-                  className="flex-1 min-w-32 outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
-                />
-              </div>
-              {showTagDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                  {allTags
-                    .filter(tag => 
-                      !problemContent.selectedTags.find(t => t.id === tag.id) &&
-                      tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
-                    )
-                    .map(tag => (
-                    <div
-                      key={tag.id}
-                      onClick={() => {
-                        setProblemContent(prev => ({
-                          ...prev,
-                          selectedTags: [...prev.selectedTags, tag]
-                        }));
-                        setTagFilterText('');
-                      }}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-900 text-gray-900 dark:text-white"
-                    >
+            {/* Tags */}
+            <div data-tags-container>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tags
+              </label>
+              <div className="relative">
+                <div className="flex flex-wrap gap-2 p-2 min-h-10 border border-gray-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-950 focus-within:ring-2 focus-within:ring-blue-500">
+                  {problemContent.selectedTags.map(tag => (
+                    <div key={tag.id} className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-2 py-0.5 rounded-full text-xs">
                       {tag.name}
+                      <button
+                        onClick={() => setProblemContent(prev => ({
+                          ...prev,
+                          selectedTags: prev.selectedTags.filter(t => t.id !== tag.id)
+                        }))}
+                        className="font-bold cursor-pointer hover:text-red-600"
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
-                  {allTags.filter(tag => 
-                    !problemContent.selectedTags.find(t => t.id === tag.id) &&
-                    tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
-                  ).length === 0 && (
-                    <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                      {allTags.length === 0 ? 'No tags available' : 'No matching tags'}
-                    </div>
-                  )}
+                  <input
+                    type="text"
+                    placeholder={problemContent.selectedTags.length === 0 ? "Add tags..." : ""}
+                    value={tagFilterText}
+                    onChange={(e) => setTagFilterText(e.target.value)}
+                    onFocus={() => setShowTagDropdown(true)}
+                    className="flex-1 min-w-20 outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 text-sm"
+                  />
                 </div>
-              )}
+                {showTagDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {allTags
+                      .filter(tag => 
+                        !problemContent.selectedTags.find(t => t.id === tag.id) &&
+                        tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
+                      )
+                      .map(tag => (
+                      <div
+                        key={tag.id}
+                        onClick={() => {
+                          setProblemContent(prev => ({
+                            ...prev,
+                            selectedTags: [...prev.selectedTags, tag]
+                          }));
+                          setTagFilterText('');
+                        }}
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-900 text-gray-900 dark:text-white text-sm"
+                      >
+                        {tag.name}
+                      </div>
+                    ))}
+                    {allTags.filter(tag => 
+                      !problemContent.selectedTags.find(t => t.id === tag.id) &&
+                      tag.name.toLowerCase().includes(tagFilterText.toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-4 py-2 text-gray-500 dark:text-gray-400 text-sm">
+                        {allTags.length === 0 ? 'No tags' : 'No match'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="pt-4 border-t border-gray-200 dark:border-zinc-800">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Sections</p>
+              <div className="space-y-1">
+                {[
+                  { value: 'slug', label: 'Slug' },
+                  { value: 'title', label: 'Title' },
+                  { value: 'description', label: 'Description' },
+                  { value: 'examples', label: 'Examples' },
+                  { value: 'hints', label: 'Hints' },
+                  { value: 'constraint', label: 'Constraint' },
+                  { value: 'requirement', label: 'Requirement' },
+                  { value: 'theory', label: 'Theory' },
+                  { value: 'preview', label: '👁️ Preview', highlight: true },
+                ].map(tab => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      activeTab === tab.value
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                    } ${tab.highlight ? 'font-bold' : ''}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-
-          {message && (
-            <div className={`mt-3 text-sm ${message.includes('success') ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-              {message}
-            </div>
-          )}
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 mb-8 bg-white dark:bg-zinc-900 p-1 rounded-lg border border-gray-200 dark:border-zinc-800">
-            <TabsTrigger value="slug" className="text-sm">Slug</TabsTrigger>
-            <TabsTrigger value="title" className="text-sm">Title</TabsTrigger>
-            <TabsTrigger value="description" className="text-sm">Description</TabsTrigger>
-            <TabsTrigger value="examples" className="text-sm">Examples</TabsTrigger>
-            <TabsTrigger value="hints" className="text-sm">Hints</TabsTrigger>
-            <TabsTrigger value="constraint" className="text-sm">Constraint</TabsTrigger>
-            <TabsTrigger value="requirement" className="text-sm">Requirement</TabsTrigger>
-            <TabsTrigger value="theory" className="text-sm">Theory</TabsTrigger>
-            <TabsTrigger value="preview" className="text-sm font-bold text-blue-600 dark:text-blue-400">Preview</TabsTrigger>
-          </TabsList>
+        {/* Right Content Area */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-black">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* Hide the TabsList since we're using the sidebar */}
+            <style>{`[role="tablist"] { display: none; }`}</style>
 
-          <TabsContent value="slug" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="slug" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Problem Slug</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">Enter a unique slug for this problem</p>
               <div className="space-y-4">
@@ -399,22 +435,22 @@ export default function ProblemEditorPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="title" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="title" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Problem Title</h2>
               <SectionEditor section="title" content={problemContent.title} onChange={handleContentChange} placeholder="Enter problem title..." />
             </div>
           </TabsContent>
 
-          <TabsContent value="description" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="description" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Problem Description</h2>
               <SectionEditor section="description" content={problemContent.description} onChange={handleContentChange} placeholder="Enter problem description..." />
             </div>
           </TabsContent>
 
-          <TabsContent value="examples" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="examples" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Examples</h2>
                 <button onClick={addExample} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">➕ Add Example</button>
@@ -437,8 +473,8 @@ export default function ProblemEditorPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="hints" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="hints" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Hints</h2>
                 <button onClick={addHint} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">➕ Add Hint</button>
@@ -461,31 +497,34 @@ export default function ProblemEditorPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="constraint" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="constraint" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Constraints</h2>
               <SectionEditor section="constraint" content={problemContent.constraint} onChange={handleContentChange} placeholder="Enter constraints..." />
             </div>
           </TabsContent>
 
-          <TabsContent value="requirement" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="requirement" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Requirements</h2>
               <SectionEditor section="requirement" content={problemContent.requirement} onChange={handleContentChange} placeholder="Enter requirements..." />
             </div>
           </TabsContent>
 
-          <TabsContent value="theory" className="space-y-4">
-            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6">
+          <TabsContent value="theory" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Theory</h2>
               <SectionEditor section="theory" content={problemContent.theory} onChange={handleContentChange} placeholder="Enter theory..." />
             </div>
           </TabsContent>
 
-          <TabsContent value="preview" className="space-y-4">
-            <ProblemPreview content={problemContent} />
+          <TabsContent value="preview" className="m-0 p-8">
+            <div className="max-w-4xl">
+              <ProblemPreview content={problemContent} />
+            </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
