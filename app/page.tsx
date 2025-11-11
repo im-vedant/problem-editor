@@ -33,6 +33,8 @@ interface ProblemContent {
   theory: string;
   difficulty: 'easy' | 'medium' | 'hard';
   selectedTags: Tag[];
+  starterCode: string;
+  runnerTemplate: string;
 }
 
 export default function ProblemEditorPage() {
@@ -47,6 +49,8 @@ export default function ProblemEditorPage() {
     theory: '',
     difficulty: 'easy',
     selectedTags: [],
+    starterCode: '',
+    runnerTemplate: '',
   });
 
   const [activeTab, setActiveTab] = useState('slug');
@@ -196,6 +200,8 @@ export default function ProblemEditorPage() {
         theory: data.theory || '',
         difficulty: data.difficulty || 'easy',
         selectedTags: tags || [],
+        starterCode: data.starterCode || '',
+        runnerTemplate: data.runnerTemplate || '',
       });
 
       setMessage('Problem loaded successfully');
@@ -236,7 +242,8 @@ export default function ProblemEditorPage() {
         constraints: cleanText(problemContent.constraint),
         difficulty: problemContent.difficulty,
         tagIds: problemContent.selectedTags.map(tag => tag.id),
-        runnerTemplate: '',
+        starterCode: problemContent.starterCode,
+        runnerTemplate: problemContent.runnerTemplate,
       };
 
       const response = await fetch('/api/problems', {
@@ -400,6 +407,8 @@ export default function ProblemEditorPage() {
                   { value: 'constraint', label: 'Constraint' },
                   { value: 'requirement', label: 'Requirement' },
                   { value: 'theory', label: 'Theory' },
+                  { value: 'starterCode', label: 'Starter Code' },
+                  { value: 'runnerTemplate', label: 'Runner Template' },
                   { value: 'preview', label: '👁️ Preview', highlight: true },
                 ].map(tab => (
                   <button
@@ -515,6 +524,30 @@ export default function ProblemEditorPage() {
             <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Theory</h2>
               <SectionEditor section="theory" content={problemContent.theory} onChange={handleContentChange} placeholder="Enter theory..." />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="starterCode" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Starter Code</h2>
+              <textarea
+                value={problemContent.starterCode}
+                onChange={(e) => setProblemContent(prev => ({ ...prev, starterCode: e.target.value }))}
+                className="w-full h-96 font-mono text-sm p-4 border border-gray-300 dark:border-zinc-700 rounded-md bg-gray-50 dark:bg-zinc-900 dark:text-white resize-vertical"
+                placeholder="Enter starter code template..."
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="runnerTemplate" className="m-0 p-8">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 p-6 max-w-4xl">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Runner Template</h2>
+              <textarea
+                value={problemContent.runnerTemplate}
+                onChange={(e) => setProblemContent(prev => ({ ...prev, runnerTemplate: e.target.value }))}
+                className="w-full h-96 font-mono text-sm p-4 border border-gray-300 dark:border-zinc-700 rounded-md bg-gray-50 dark:bg-zinc-900 dark:text-white resize-vertical"
+                placeholder="Enter runner template code..."
+              />
             </div>
           </TabsContent>
 

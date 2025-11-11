@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       constraints,
       difficulty = 'easy',
       tagIds = [],
+      starterCode,
       runnerTemplate,
     } = body;
 
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
           hints: JSON.stringify(hints || []),
           constraints: constraints || '',
           difficulty: difficulty || 'easy',
+          starterCode: starterCode || '',
           runnerTemplate: runnerTemplate || '',
           updatedAt: new Date(),
         })
@@ -131,6 +133,7 @@ export async function POST(request: Request) {
           hints: JSON.stringify(hints || []),
           constraints: constraints || '',
           difficulty: difficulty || 'easy',
+          starterCode: starterCode || '',
           runnerTemplate: runnerTemplate || '',
         })
         .returning();

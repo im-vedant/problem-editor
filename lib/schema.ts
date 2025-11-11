@@ -126,7 +126,8 @@ export const problem = pgTable("problem", {
   hints: text("hints").notNull().default("[]"), // JSON string array
   constraints: text("constraints").notNull().default(""),
   difficulty: text("difficulty").default("easy").notNull(), // easy, medium, hard
-  runnerTemplate: text("runner_template").notNull(),
+  starterCode: text("starter_code").notNull().default(""),
+  runnerTemplate: text("runner_template").notNull().default(""),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
